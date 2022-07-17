@@ -1,0 +1,8 @@
+.allheight{
+    height:calc(100vh - 80px);
+}
+.alert-special{
+    left: 50%;
+    /* display: block; */
+    transform: translate(-50%, 0);
+}

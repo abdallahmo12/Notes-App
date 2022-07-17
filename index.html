@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Bootstrap V4</title>
+
+    <!-- bootstrap css cdn link -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+
+    <!-- My style -->
+    <link rel="stylesheet" href="CSS/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+        <a class="navbar-brand text-primary href="#"><h3>Daily Notes</h1></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav ml-auto">
+                <a id="userName" class="nav-item nav-link active" href="profile.html">Hello<span class="sr-only">(current)</span></a>
+                <button type="button" class="nav-item btn btn-info" id="signout_submit" href="#">Log Out</button>
+            </div>
+        </div>
+    </nav>
+    <div class="alert alert-info position-absolute alert-special" style="display: none;" id="A" role="alert">
+        <p class="form-control text-truncate" placeholder="Note Description" id="note-descrip"></p>
+    </div>
+    <div id="form-log-in-out" class="container">
+        <div class="w-100">
+            <form class="was-validated" id="signup-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" required/>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" required/>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" required/>
+                </div>
+                <div class="form-group row">
+                    <!-- <label for="email">Email</label> -->
+                    <input type="submit" class=" col mx-2 btn btn-primary" id="signin_submit" value="SignIn" aria-label="signin" />
+                    <input type="submit" class=" col mx-2 btn btn-primary" id="signup_submit" value="SignUp" aria-label="signup" />
+                    <!-- <input type="submit" class=" col mx-2 btn btn-primary" id="signout_submit" value="SignOut" aria-label="signout" /> -->
+                </div>
+            </form>
+            <div class="spinner-border text-success m-auto" style="display: none;" id="loading"></div>
+        </div>
+    </div>
+    <div id="noteCreation" class="container">
+        <form>
+            <div class="form-group">
+                <label for="note-title"></label>
+                <input type="text" class="form-control" placeholder="Note Title" id="note-title"/>
+            </div>
+            <div class="form-group">
+                <!-- <label for="note-desc"></label> -->
+                <textarea class="form-control" placeholder="Note Description" id="note-desc" rows="3" ></textarea>
+            </div>
+            <div class="row form-group">
+                <input type="submit" value="Save Note" class="col mx-2 my-1 btn btn-danger form-control" id="save-data" aria-label="save"/>
+                <input type="submit" value="Show All Notes" class="col mx-2 my-1 btn btn-danger form-control" id="show-data" aria-label="showAll"/>
+                <input type="submit" value="Show Note" class="col mx-2 my-1 btn btn-danger form-control" id="show-note" aria-label="showNote"/>
+                <input type="submit" value="Update Note" class="col mx-2 my-1 btn btn-danger form-control" id="update-note" aria-label="updateNote"/>
+                <input type="submit" value="Delete Note" class="col mx-2 my-1 btn btn-danger form-control" id="deleteNote" aria-label="deleteNote"/>
+            </div>
+        </form>
+    </div>
+    <div id="notesHead" class="container text-center">
+        <h1 class="bg-light py-3 my-5 rounded-bottom text-info"> My Notes </h1>
+    </div>
+    <div id="notesDom" class="container">
+        <div class="row" id="notes">
+            
+        </div>
+
+    </div>
+    <!-- Scrits -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="JS/script.js"></script> -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
+        // import to getDatabase from Reattime database
+        import { getDatabase ,set , ref , update , onValue , remove } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-database.js";
+        // import authantication ...
+        import { getAuth, createUserWithEmailAndPassword , signInWithEmailAndPassword , onAuthStateChanged , signOut } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-auth.js";
+
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+    
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCwt5c4OXmDnqKM_XThqZ0R7s_XSqBeOeM",
+            authDomain: "authentication-app-7891b.firebaseapp.com",
+            databaseURL: "https://authentication-app-7891b-default-rtdb.firebaseio.com",
+            projectId: "authentication-app-7891b",
+            storageBucket: "authentication-app-7891b.appspot.com",
+            messagingSenderId: "523599710444",
+            appId: "1:523599710444:web:c09b668c5523530296bdc9"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        // Initialize Database from Realtime database
+        const database = getDatabase(app);
+        // initialize authentication
+        const auth = getAuth();
+        // console.log(auth);
+
+        var registerBtn = document.getElementById("signup_submit");
+        var loginBtn = document.getElementById("signin_submit");
+        var logoutBtn = document.getElementById("signout_submit");
+        var singnUpForm = document.getElementById("signup-form");
+        var loading = document.getElementById("loading");
+
+        console.log(registerBtn);
+        // sign Up user (email + password)
+        registerBtn.addEventListener('click' , (e) => {
+            e.preventDefault();
+            var Username = document.getElementById("username").value;
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+
+                // setTimeout( () =>{
+                // singnUpForm.style.display = "none";
+                // loading.style.display = "block";
+                // } , 500 );
+                if(Username && email && password){
+                set(ref(database, "users/" + user.uid) , {
+                    username: Username,
+                    email : email,
+                    pass : password,
+                });
+                // window.location="login.html";
+                // console.log(user);
+                // message appeare when email and pass sent to firebase
+                alert("User Created !");
+                }else{
+                    alert("Please Fill Data");
+                }
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                // message appeare when something went wrong
+                alert(errorMessage);
+                // ..
+            });
+            singnUpForm.style.display = "block";
+            loading.style.display = "none";
+        });
+
+        loginBtn.addEventListener('click' , (e) => {
+            e.preventDefault();
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+
+            signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+
+                if(email && password){
+                // store the last login to the site in realtime Database
+                const dt = new Date();
+
+                update(ref(database, "users/" + user.uid) , {
+                    last_loggedin : dt 
+                })
+                // message appeare when email and pass sent to firebase
+                console.log(user);
+                alert("User Logged in !");
+                }
+                else{
+                    alert("Please Fill Data");
+                }
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                // message appeare when something went wrong
+                alert(errorMessage);
+                // ..
+            });
+        });
+
+        //add to Firebase (write operation to database)
+        var saveNote = document.getElementById("save-data");
+        saveNote.addEventListener("click",(e)=>{
+            e.preventDefault();
+            var noteTitle = document.getElementById("note-title").value;
+            var noteDesc = document.getElementById("note-desc").value;
+            const user = auth.currentUser;
+            onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, see docs for a list of available properties
+                // https://firebase.google.com/docs/reference/js/firebase.User
+                const uid = user.uid;
+                console.log("I'm user" , uid);
+                if(noteTitle && noteDesc){
+                set(ref( database , "users/" + user.uid + "/notes/" + noteTitle ),{
+                    noteTitle : noteTitle,
+                    noteDesc : noteDesc,
+                });
+                }else{
+                    alert("Please complete Note Details");
+                }
+                // ...
+            } else {
+                // User is signed out
+                // ...
+                console.log("can't add note you are not logged in");
+            }
+            });
+        });
+
+        // Authentication By Defualt
+        const user = auth.currentUser;
+        onAuthStateChanged(auth, (user) => {
+            let _form = document.getElementById("form-log-in-out");
+            let formContent = document.querySelectorAll(".form-content");
+            let _username = document.getElementById("userName");
+            let noteCreation = document.getElementById("noteCreation");
+            let notesHead = document.getElementById("notesHead");
+            let notesDom = document.getElementById("notesDom");
+            if (user) {
+                // User is signed in, see docs for a list of available properties
+                // https://firebase.google.com/docs/reference/js/firebase.User
+                const uid = user.uid;
+                console.log("I'm user" , uid);
+
+                _form.style.display = "none";
+                console.log(user);
+                _username.innerHTML =""
+                _username.innerHTML += " "+ user.email;
+                noteCreation.style.display = "block";
+                notesHead.style.display = "block";
+                notesDom.style.display = "block";
+                // ...
+            } else {
+                // User is signed out
+                // ...
+                _form.style.display = "flex";
+                noteCreation.style.display = "none";
+                notesHead.style.display = "none";
+                notesDom.style.display = "none";
+                console.log("can't add note you are not logged in");
+            }
+        });
+        
+        //show All notes that saved in firebase 
+        var showNotes = document.getElementById("show-data");
+        showNotes.addEventListener("click",(e)=>{
+            e.preventDefault();
+            var noteTitle = document.getElementById("note-title").value;
+            var noteDesc = document.getElementById("note-desc").value;
+            const user = auth.currentUser;
+            onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, see docs for a list of available properties
+                // https://firebase.google.com/docs/reference/js/firebase.User
+                const uid = user.uid;
+                // console.log("I'm user" , uid);
+                const starCountRef = ref(database, "users/" + user.uid + '/notes/');
+                onValue(starCountRef, (snapshot) => {
+                const data = snapshot.val();
+                // console.log(data);
+                const arr = Object.keys(data);
+                let notes = arr.map(item =>
+                {
+                    return `<div class="col-lg-4 col-md-6 col-12">
+                        <div class="m-1 p-3 bg-info rounded">
+                            <p class="h2">${data[item].noteTitle ? data[item].noteTitle : ''}</p>
+                            <p class="text-white"> ${data[item].noteDesc ? data[item].noteDesc : ''} </p>
+                        </div>
+                    </div>`
+                }).join('');
+                // console.log(arr);
+                document.getElementById("notes").innerHTML = notes;
+                });
+                // ...
+            } else {
+                // User is signed out
+                // ...
+                alert("can't add note you are not logged in");
+            }
+            });
+        });
+        
+        //show Specific Note Details using (noteTitle) that saved in firebase 
+        var showSingleNote = document.getElementById("show-note");
+        showSingleNote.addEventListener("click", (e) =>{
+            e.preventDefault();
+            var noteTitle = document.getElementById("note-title").value;
+            const user = auth.currentUser;
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    const uid = user.uid;
+                    // document.querySelector(".alert").style.display = "block";
+                    if(noteTitle){
+                    const starCountRef = ref(database, 'users/' + user.uid + '/notes/' + noteTitle );
+                    // console.log(starCountRef);
+                    onValue(starCountRef, (snapshot) => {
+                    const data = snapshot.val();
+                    console.log(data);
+                        if(data){
+                            document.getElementById("note-descrip").innerHTML = '';
+                            document.getElementById("note-descrip").innerHTML = data.noteDesc;
+                            document.querySelector("#A").style.display === "block" ?
+                            document.querySelector("#A").style.display = "none" : document.querySelector("#A").style.display = "block";
+                        }
+                        else{
+                            alert("Note Title is not Valid !");
+                        }
+                    });
+
+                }else{
+                    alert("Please Enter Note Title to Show its Details !");
+                }
+                // ...
+                } else {
+                    // User is signed out
+                    // ...
+                    alert(" You cann't get Note Details you are not logged in");
+                }
+            });
+        });
+        
+
+        //update Note Details using (noteTitle) that saved in firebase 
+        var updateSingleNote = document.getElementById("update-note");
+        updateSingleNote.addEventListener("click", (e) =>{
+            e.preventDefault();
+            var noteTitle = document.getElementById("note-title").value;
+            var noteDesc = document.getElementById("note-desc").value;
+            const user = auth.currentUser;
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    const uid = user.uid;
+                    if(noteTitle && noteDesc){
+                        //validation (make sure that inputValue === ref in database)
+                        const starCountRef = ref(database, 'users/' + user.uid + '/notes/' + noteTitle );
+                        // console.log(starCountRef);
+                        onValue(starCountRef, (snapshot) => {
+                        const data = snapshot.val();
+                        console.log(data);
+                            if(data && noteTitle == data.noteTitle){
+                                alert("I'm "+ data.noteTitle);
+                                const postData = {
+                                    noteTitle : noteTitle,
+                                    noteDesc : noteDesc,
+                                };
+
+                                // Write the new post's data simultaneously in the posts list and the user's post list.
+                                const updates = {};
+                                updates["/users/"+ uid + "/notes/"+ noteTitle] = postData;
+
+                                return update(ref(database), updates);
+                            
+                            alert("Note "+ noteTitle + " is Updated ....");
+                            // ...
+                            }
+                            else{
+                                alert("Note Title is not Valid !");
+                            }
+                        });
+                    }
+                    else{
+                        alert("please Fill Updated Data !");
+                    }
+                    
+                } else {
+                    // User is signed out
+                    // ...
+                    alert(" You cann't update Note Details you are not logged in");
+                }
+            });
+        });
+
+        //Delete Note Details using (noteTitle) that saved in firebase 
+        var deleteSingleNote = document.getElementById("deleteNote");
+        deleteSingleNote.addEventListener("click", (e) =>{
+            e.preventDefault();
+            var noteTitle = document.getElementById("note-title").value;
+            const user = auth.currentUser;
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    const uid = user.uid;
+                    if(noteTitle){
+                        const starCountRef = ref(database, 'users/' + user.uid + '/notes/' + noteTitle );
+                        // console.log(starCountRef);
+                        onValue(starCountRef, (snapshot) => {
+                            const data = snapshot.val();
+                            // console.log(data);
+                            if(data == null || noteTitle !== data.noteTitle){
+                                alert("Note Title is not found !");
+                                return;
+                            }
+                            remove(ref(database , "users/" + uid + "/notes/" + noteTitle));
+                            alert(" Note Deleted ....");
+                        });
+                    }else{
+                        alert(" Please Enter Note Title to Remove !");
+                    }
+                    // ...
+                } else {
+                    // User is signed out
+                    // ...
+                    alert(" You cann't delete Note Details you are not logged in");
+                }
+            });
+        });
+
+
+        // const user = auth.currentUser;
+        logoutBtn.addEventListener("click" , (e) => {
+            e.preventDefault();
+            signOut(auth).then(() => {
+            // Sign-out successful.
+            console.log(user);
+            document.querySelector("#A").style.display = "none"
+            alert("user signed Out !");             
+            }).catch((error) => {
+            // An error happened.
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            // message appeare when something went wrong
+            alert(errorMessage);
+            });
+        });
+        
+    </script>
+</body>
+</html>
